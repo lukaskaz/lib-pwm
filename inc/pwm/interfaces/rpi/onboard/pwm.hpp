@@ -11,16 +11,19 @@ namespace pwm::rpi::onboard
 enum class polaritytype
 {
     normal,
-    inverted
+    inversed
 };
 
-using config_t = std::tuple<uint32_t, uint32_t, polaritytype, std::string>;
+using config_t =
+    std::tuple<uint32_t, uint32_t, uint32_t, polaritytype, std::string>;
 
 class Pwm : public PwmIf
 {
   public:
     ~Pwm();
-    bool setduty() override;
+    bool start() override;
+    bool stop() override;
+    bool setduty(uint32_t) override;
 
   private:
     friend class pwm::Factory;
