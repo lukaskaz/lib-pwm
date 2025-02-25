@@ -2,7 +2,10 @@
 
 #include "pwm/factory.hpp"
 
+#include <chrono>
 #include <tuple>
+
+using namespace std::chrono_literals;
 
 namespace pwm::rpi::pca9685
 {
@@ -20,6 +23,8 @@ class Pwm : public PwmIf
 {
   public:
     ~Pwm();
+    bool start() override;
+    bool stop() override;
     bool setduty(uint32_t) override;
 
   private:
