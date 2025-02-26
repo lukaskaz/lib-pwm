@@ -2,15 +2,14 @@
 
 #include "sysfs/interfaces/linux/sysfs.hpp"
 
-#include <algorithm>
-#include <functional>
-#include <future>
-#include <ranges>
+#include <chrono>
+#include <unordered_map>
 
 namespace pwm::rpi::pca9685
 {
 
 using namespace sysfs::lnx;
+using namespace std::chrono_literals;
 
 struct Pwm::Handler
 {
@@ -20,9 +19,9 @@ struct Pwm::Handler
         sysfs{sysfs::Factory::create<Sysfs, configexportrw_t>(
             {std::get<4>(config), type, id})}
     {
-        setduty(std::get<1>(config));
-        setfreq(std::get<2>(config));
         setpolarity(std::get<3>(config));
+        setfreq(std::get<2>(config));
+        setduty(std::get<1>(config));
         start();
     }
 
@@ -45,7 +44,7 @@ struct Pwm::Handler
         return true;
     }
 
-    bool setduty(uint32_t duty)
+    bool setduty(double duty)
     {
         return sysfs->write("duty_cycle", std::to_string(perctoduty(duty)));
     }
@@ -55,7 +54,7 @@ struct Pwm::Handler
     const std::string type{"pwm"};
     const uint32_t dutymin{0}, dutymax{100};
     const std::chrono::nanoseconds period;
-    std::shared_ptr<sysfs::SysfsIf> sysfs;
+    const std::shared_ptr<sysfs::SysfsIf> sysfs;
 
     bool setfreq(uint32_t freqhz)
     {
@@ -65,24 +64,25 @@ struct Pwm::Handler
 
     bool setpolarity(polaritytype polarity)
     {
-        std::unordered_map<polaritytype, std::string> map = {
+        static const std::unordered_map<polaritytype, std::string> map = {
             {polaritytype::normal, "normal"},
             {polaritytype::inversed, "inversed"}};
-        sysfs->write("polarity", map[polarity]);
+        sysfs->write("polarity", map.at(polarity));
         return true;
     }
 
     uint64_t freqtoperiod(uint32_t freqhz)
     {
+        static constexpr std::chrono::nanoseconds timehz{1s};
         return std::chrono::nanoseconds(
-                   (uint64_t)(1000000000.f / (double)freqhz))
+                   (uint64_t)(timehz.count() / (double)freqhz))
             .count();
     }
 
-    uint64_t perctoduty(uint32_t duty)
+    uint64_t perctoduty(double duty)
     {
         if (duty >= dutymin && duty <= dutymax)
-            return period.count() * duty / dutymax;
+            return (uint64_t)((decltype(duty))period.count() * duty / dutymax);
         throw std::runtime_error("duty cycle out of range: " +
                                  std::to_string(duty));
     }
@@ -102,7 +102,7 @@ bool Pwm::stop()
     return handler->stop();
 }
 
-bool Pwm::setduty(uint32_t duty)
+bool Pwm::setduty(double duty)
 {
     return handler->setduty(duty);
 }
