@@ -3,6 +3,7 @@
 #include "sysfs/interfaces/linux/sysfs.hpp"
 
 #include <chrono>
+#include <cmath>
 #include <unordered_map>
 
 namespace pwm::rpi::onboard
@@ -75,15 +76,16 @@ struct Pwm::Handler
     {
         static constexpr std::chrono::nanoseconds timehz{1s};
         return std::chrono::nanoseconds(
-                   (uint64_t)(timehz.count() / (double)freqhz))
+                   std::llround(timehz.count() / (double)freqhz))
             .count();
     }
 
     uint64_t perctoduty(double duty)
     {
         if (duty >= dutymin && duty <= dutymax)
-            return (uint64_t)((decltype(duty))period.count() * duty / dutymax);
-        throw std::runtime_error("duty cycle out of range: " +
+            return std::llround((decltype(duty))period.count() * duty /
+                                dutymax);
+        throw std::runtime_error("Duty cycle out of range: " +
                                  std::to_string(duty));
     }
 };

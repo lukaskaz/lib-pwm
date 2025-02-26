@@ -20,4 +20,8 @@ file(GLOB_RECURSE SOURCES "src/*.cpp")
 
 add_library(${PROJECT_NAME} ${SOURCES})
 add_dependencies(${PROJECT_NAME} libsysfs)
-target_link_libraries(${PROJECT_NAME} sysfs)
+target_link_libraries(${PROJECT_NAME}
+    sysfs
+    ${WIRINGPI_LIBRARIES}
+    ${CMAKE_THREAD_LIBS_INIT}
+)

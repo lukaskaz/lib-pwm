@@ -2,3 +2,6 @@ dtoverlay=pwm,pin=12,func=4
 dtoverlay=pwm-2chan,pin=12,func=4,pin2=13,func2=4
 dtoverlay=i2c-pwm-pca9685a,addr=0x40
 
+git clone https://github.com/WiringPi/WiringPi.git
+sudo apt install ./wiringpi-3.0-1.deb
+
