@@ -36,6 +36,7 @@ jobs:
       run: |
         ./build/examples/rpi/onboard/prog
         ./build/examples/rpi/pca9685/prog
+        ./build/examples/rpi/soft/prog
 
   test:
     name: Test
