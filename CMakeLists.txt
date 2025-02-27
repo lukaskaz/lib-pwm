@@ -22,6 +22,7 @@ add_library(${PROJECT_NAME} ${SOURCES})
 add_dependencies(${PROJECT_NAME} libsysfs)
 target_link_libraries(${PROJECT_NAME}
     sysfs
+    logger
     ${WIRINGPI_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
 )

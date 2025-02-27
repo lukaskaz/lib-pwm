@@ -1,3 +1,4 @@
+#include "log/interfaces/console.hpp"
 #include "pwm/interfaces/rpi/soft/pwm.hpp"
 
 #include <algorithm>
@@ -8,16 +9,21 @@ int main(int argc, char** argv)
 {
     try
     {
-        if (argc >= 4)
+        if (argc == 5)
         {
             std::cout << "PWMs scenario started\n";
             const std::string pwmpath{"/sys/class/pwm/pwmchip2"};
             auto pin = (uint32_t)atoi(argv[1]);
             auto duty = (uint32_t)atoi(argv[2]);
             auto freq = (uint32_t)atoi(argv[3]);
+            auto loglvl = (bool)atoi(argv[3]) ? logging::type::debug
+                                              : logging::type::info;
 
             using namespace pwm::rpi::soft;
-            auto pwm = pwm::Factory::create<Pwm, config_t>({pin, duty, freq});
+            auto logif =
+                logging::LogFactory::create<logging::console::Log>(loglvl);
+            auto pwm =
+                pwm::Factory::create<Pwm, config_t>({pin, duty, freq, logif});
 
             std::cout << "PWM initiated\n";
             std::cout << "Press [enter]" << std::flush;
