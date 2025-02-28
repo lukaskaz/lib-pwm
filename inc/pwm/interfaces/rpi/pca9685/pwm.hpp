@@ -1,5 +1,6 @@
 #pragma once
 
+#include "log/interfaces/logging.hpp"
 #include "pwm/factory.hpp"
 
 #include <string>
@@ -14,8 +15,8 @@ enum class polaritytype
     inversed
 };
 
-using config_t =
-    std::tuple<uint32_t, double, uint32_t, polaritytype, std::string>;
+using config_t = std::tuple<uint32_t, double, uint32_t, polaritytype,
+                            std::string, std::shared_ptr<logging::LogIf>>;
 
 class Pwm : public PwmIf
 {

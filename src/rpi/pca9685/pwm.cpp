@@ -4,6 +4,7 @@
 
 #include <chrono>
 #include <cmath>
+#include <source_location>
 #include <unordered_map>
 
 namespace pwm::rpi::pca9685
@@ -16,14 +17,22 @@ struct Pwm::Handler
 {
   public:
     explicit Handler(const config_t& config) :
-        id{std::get<0>(config)}, period{freqtoperiod(std::get<2>(config))},
+        logif{std::get<5>(config)}, id{std::get<0>(config)},
+        period{periodfromfreq(std::get<2>(config))},
         sysfs{sysfs::Factory::create<Sysfs, configexportrw_t>(
-            {std::get<4>(config), type, id})}
+            {std::get<4>(config), type, id, logif})}
     {
         setpolarity(std::get<3>(config));
         setfreq(std::get<2>(config));
         setduty(std::get<1>(config));
         start();
+        log(logging::type::info,
+            "Created pwm [id/polarity/freq/period/duty]: " +
+                std::to_string(id) + "/" +
+                std::to_string((int32_t)std::get<3>(config)) + "/" +
+                std::to_string(std::get<2>(config)) + "/" +
+                std::to_string(period.count()) + "/" +
+                std::to_string(std::get<1>(config)));
     }
 
     ~Handler()
@@ -31,6 +40,7 @@ struct Pwm::Handler
         setduty(0);
         setfreq(0);
         stop();
+        log(logging::type::info, "Removed pwm: " + std::to_string(id));
     }
 
     bool start()
@@ -47,10 +57,11 @@ struct Pwm::Handler
 
     bool setduty(double duty)
     {
-        return sysfs->write("duty_cycle", std::to_string(perctoduty(duty)));
+        return sysfs->write("duty_cycle", std::to_string(dutyfrompct(duty)));
     }
 
   private:
+    const std::shared_ptr<logging::LogIf> logif;
     const uint32_t id;
     const std::string type{"pwm"};
     const uint32_t dutymin{0}, dutymax{100};
@@ -59,7 +70,7 @@ struct Pwm::Handler
 
     bool setfreq(uint32_t freqhz)
     {
-        sysfs->write("period", std::to_string(freqtoperiod(freqhz)));
+        sysfs->write("period", std::to_string(periodfromfreq(freqhz)));
         return true;
     }
 
@@ -72,21 +83,42 @@ struct Pwm::Handler
         return true;
     }
 
-    uint64_t freqtoperiod(uint32_t freqhz)
+    uint64_t periodfromfreq(uint32_t freqhz)
     {
         static constexpr std::chrono::nanoseconds timehz{1s};
-        return std::chrono::nanoseconds(
-                   std::llround(timehz.count() / (double)freqhz))
-            .count();
+        const auto period =
+            freqhz ? std::chrono::nanoseconds(
+                         std::llround(timehz.count() / (double)freqhz))
+                         .count()
+                   : 0;
+        log(logging::type::debug, "Period[" + std::to_string(id) + "]: '" +
+                                      std::to_string(period) + "' from freq '" +
+                                      std::to_string(freqhz) + "'");
+        return period;
     }
 
-    uint64_t perctoduty(double duty)
+    uint64_t dutyfrompct(double dutypct)
     {
-        if (duty >= dutymin && duty <= dutymax)
-            return std::llround((decltype(duty))period.count() * duty /
-                                dutymax);
-        throw std::runtime_error("Duty cycle out of range: " +
-                                 std::to_string(duty));
+        if (dutypct >= dutymin && dutypct <= dutymax)
+        {
+            const auto duty = std::llround((decltype(dutypct))period.count() *
+                                           dutypct / dutymax);
+            log(logging::type::debug,
+                "Duty[" + std::to_string(id) + "]: '" + std::to_string(duty) +
+                    "' from pct '" + std::to_string(dutypct) + "'");
+            return duty;
+        }
+        throw std::runtime_error("Duty cycle out of range[" +
+                                 std::to_string(id) +
+                                 "]: " + std::to_string(dutypct));
+    }
+
+    void log(
+        logging::type type, const std::string& msg,
+        const std::source_location loc = std::source_location::current()) const
+    {
+        if (logif)
+            logif->log(type, std::string{loc.function_name()}, msg);
     }
 };
 

@@ -26,3 +26,16 @@ libsysfs
 )
 include_directories(${source_dir}/inc)
 link_directories(${build_dir}/build)
+
+if(NOT (EXISTS ${CMAKE_BINARY_DIR}/liblogger-src
+    OR EXISTS ${CMAKE_BINARY_DIR}/liblogger-build))
+    execute_process(
+        COMMAND ln -s ${build_dir}/build/liblogger-src ${CMAKE_BINARY_DIR}
+        COMMAND ln -s ${build_dir}/build/liblogger-build ${CMAKE_BINARY_DIR}
+    )
+endif()
+
+set(source_dir "${CMAKE_BINARY_DIR}/liblogger-src")
+set(build_dir "${CMAKE_BINARY_DIR}/liblogger-build")
+include_directories(${source_dir}/inc)
+link_directories(${build_dir}/build)
