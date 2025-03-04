@@ -24,7 +24,7 @@ struct Pwm::Handler
             throw std::runtime_error("Cannot initialize wiringpi");
         start();
         setduty(std::get<1>(config));
-        log(logging::type::info,
+        log(logs::level::info,
             "Created pwm [pin/freq/period/duty]: " + std::to_string(pin) + "/" +
                 std::to_string(std::get<2>(config)) + "/" +
                 std::to_string(period.count()) + "/" +
@@ -35,7 +35,7 @@ struct Pwm::Handler
     {
         setduty(0);
         stop();
-        log(logging::type::info, "Removed pwm pin: " + std::to_string(pin));
+        log(logs::level::info, "Removed pwm pin: " + std::to_string(pin));
     }
 
     bool start()
@@ -58,7 +58,7 @@ struct Pwm::Handler
     }
 
   private:
-    const std::shared_ptr<logging::LogIf> logif;
+    const std::shared_ptr<logs::LogIf> logif;
     const uint32_t pin;
     const uint32_t dutymin{0}, dutymax{100};
     const std::chrono::microseconds period;
@@ -71,9 +71,9 @@ struct Pwm::Handler
                          std::llround(timehz.count() / (double)freqhz))
                          .count()
                    : 0;
-        log(logging::type::debug, "Period[" + std::to_string(pin) + "]: '" +
-                                      std::to_string(period) + "' from freq '" +
-                                      std::to_string(freqhz) + "'");
+        log(logs::level::debug, "Period[" + std::to_string(pin) + "]: '" +
+                                    std::to_string(period) + "' from freq '" +
+                                    std::to_string(freqhz) + "'");
         return period;
     }
 
@@ -83,9 +83,9 @@ struct Pwm::Handler
         {
             const auto duty = std::llround((decltype(dutypct))period.count() *
                                            dutypct / dutymax);
-            log(logging::type::debug,
-                "Duty[" + std::to_string(pin) + "]: '" + std::to_string(duty) +
-                    "' from pct '" + std::to_string(dutypct) + "'");
+            log(logs::level::debug, "Duty[" + std::to_string(pin) + "]: '" +
+                                        std::to_string(duty) + "' from pct '" +
+                                        std::to_string(dutypct) + "'");
             return duty;
         }
         throw std::runtime_error("Duty cycle out of range[" +
@@ -94,11 +94,11 @@ struct Pwm::Handler
     }
 
     void log(
-        logging::type type, const std::string& msg,
+        logs::level level, const std::string& msg,
         const std::source_location loc = std::source_location::current()) const
     {
         if (logif)
-            logif->log(type, std::string{loc.function_name()}, msg);
+            logif->log(level, std::string{loc.function_name()}, msg);
     }
 };
 
