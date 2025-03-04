@@ -1,6 +1,6 @@
 #pragma once
 
-#include "log/interfaces/logging.hpp"
+#include "log/interfaces/logs.hpp"
 #include "pwm/factory.hpp"
 
 #include <tuple>
@@ -9,7 +9,7 @@ namespace pwm::rpi::soft
 {
 
 using config_t =
-    std::tuple<uint32_t, double, uint32_t, std::shared_ptr<logging::LogIf>>;
+    std::tuple<uint32_t, double, uint32_t, std::shared_ptr<logs::LogIf>>;
 
 class Pwm : public PwmIf
 {

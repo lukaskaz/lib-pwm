@@ -1,4 +1,4 @@
-#include "log/interfaces/console.hpp"
+#include "log/interfaces/console/logs.hpp"
 #include "pwm/interfaces/rpi/pca9685/pwm.hpp"
 
 #include <algorithm>
@@ -15,12 +15,12 @@ int main(int argc, char** argv)
             const std::string pwmpath{"/sys/class/pwm/pwmchip2"};
             auto duty = (uint32_t)atoi(argv[1]);
             auto freq = (uint32_t)atoi(argv[2]);
-            auto loglvl = (bool)atoi(argv[3]) ? logging::type::debug
-                                              : logging::type::info;
+            auto loglvl =
+                (bool)atoi(argv[3]) ? logs::level::debug : logs::level::info;
 
             using namespace pwm::rpi::pca9685;
-            auto logif =
-                logging::LogFactory::create<logging::console::Log>(loglvl);
+            auto logif = logs::Factory::create<logs::console::Log,
+                                               logs::console::config_t>(loglvl);
             auto pwm0 = pwm::Factory::create<Pwm, config_t>(
                 {0, duty, freq, polaritytype::normal, pwmpath, logif});
             auto pwm1 = pwm::Factory::create<Pwm, config_t>(

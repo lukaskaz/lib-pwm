@@ -1,4 +1,4 @@
-#include "log/interfaces/console.hpp"
+#include "log/interfaces/console/logs.hpp"
 #include "pwm/interfaces/rpi/soft/pwm.hpp"
 
 #include <algorithm>
@@ -16,12 +16,12 @@ int main(int argc, char** argv)
             auto pin = (uint32_t)atoi(argv[1]);
             auto duty = (uint32_t)atoi(argv[2]);
             auto freq = (uint32_t)atoi(argv[3]);
-            auto loglvl = (bool)atoi(argv[3]) ? logging::type::debug
-                                              : logging::type::info;
+            auto loglvl =
+                (bool)atoi(argv[3]) ? logs::level::debug : logs::level::info;
 
             using namespace pwm::rpi::soft;
-            auto logif =
-                logging::LogFactory::create<logging::console::Log>(loglvl);
+            auto logif = logs::Factory::create<logs::console::Log,
+                                               logs::console::config_t>(loglvl);
             auto pwm =
                 pwm::Factory::create<Pwm, config_t>({pin, duty, freq, logif});
 
